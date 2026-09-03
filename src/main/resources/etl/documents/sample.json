@@ -1,0 +1,15 @@
+{
+  "title": "Spring AI ETL Demo",
+  "category": "AI Engineering",
+  "summary": "This JSON document demonstrates how raw content can be transformed and loaded into a vector database.",
+  "sections": [
+    {
+      "heading": "Overview",
+      "content": "Spring AI integrates large language models with retrieval systems. Documents are converted to embeddings and stored for semantic search."
+    },
+    {
+      "heading": "Process",
+      "content": "The ETL pipeline reads source files, transforms the text, chunks it, and loads the results into a vector store."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: spring-ai
+  mongodb:
+    uri: mongodb://localhost:27017/spring-ai
+  ai:
+    chat:
+      memory:
+        repository:
+          mongo:
+            create-indices: true
+    openai:
+      api-key: Place your OpenAI API key here
+      chat:
+        options:
+          model: gpt-4o-mini
+      embedding:
+        options:
+          model: text-embedding-3-small
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: spring_ai_documents
+        use-tls: false
+        initialize-schema: true
+
+app:
+  ai:
+    retrieval:
+      top-k: 4
+      similarity-threshold: 0.5
+    safeguard:
+      sensitive-words:
+        - abusive
+        - vulgar
+        - violence
+        - hate
+        - attack
+        - kill
+        - bomb
+        - terror
+        - illegal
+        - weapon
+      failure-response: "I cannot fulfill this request because it contains prohibited or sensitive content."
+
+logging:
+  level:
+    root: INFO
+    org.springframework.ai.chat.client.advisor: DEBUG
+    com.learning: DEBUG
