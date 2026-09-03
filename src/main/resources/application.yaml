@@ -55,3 +55,13 @@ logging:
     root: INFO
     org.springframework.ai.chat.client.advisor: DEBUG
     com.learning: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    displayRequestDuration: true
