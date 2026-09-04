@@ -20,7 +20,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Spring AI Learning API")
-                        .description("REST API Documentation for Spring AI capabilities including Chat Memory, RAG (Retrieval-Augmented Generation), Advanced Contextual RAG, Tool / Function Calling, Document ETL Pipeline, Qdrant Vector Store, and Whisper Audio Transcription.")
+                        .description("REST API Documentation for Spring AI capabilities including Chat Memory, RAG (Retrieval-Augmented Generation), Advanced Contextual RAG, Tool / Function Calling, Document ETL Pipeline, Qdrant Vector Store, Whisper Audio Transcription, Image Generation & Download, and Model Context Protocol (MCP).")
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("Spring AI Learning Team")
@@ -36,7 +36,10 @@ public class OpenApiConfig {
                         new Tag().name("Tool Calling API").description("Endpoints demonstrating Spring AI Tool / Function Calling (DateTime, Calculator, JSONPlaceholder User APIs)"),
                         new Tag().name("Knowledge Base API").description("Endpoints for storing and searching vector embeddings in Qdrant Vector Store"),
                         new Tag().name("ETL Pipeline API").description("Batch document ingestion pipeline supporting PDF, JSON, DOCX, Markdown, Text, and HTML"),
-                        new Tag().name("Audio Transcription API").description("Audio speech-to-text transcription powered by OpenAI Whisper")
+                        new Tag().name("Audio Transcription API").description("Audio speech-to-text transcription powered by OpenAI Whisper"),
+                        new Tag().name("Image Generation API").description("Generate and directly view or download images using OpenAI image models"),
+                        new Tag().name("Internal Product MCP API").description("Chat with in-process MCP Server exposing MongoDB Product CRUD tools"),
+                        new Tag().name("External Draw.io MCP API").description("Generate editable Draw.io architecture diagrams via external MCP Server client")
                 ));
     }
 }

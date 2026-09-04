@@ -1,89 +1,100 @@
-# Spring AI Learning & Showcase Project 🚀
+# Spring AI Showcase & Reference Project 🚀
 
-A comprehensive Spring Boot application showcasing **Spring AI** capabilities including Conversational Chat Memory, Basic & Advanced RAG, Function / Tool Calling, Multi-format Document ETL Pipeline, Vector Store Search (Qdrant), Speech-to-Text Transcription, and **Model Context Protocol (MCP)** — both as a server exposing tools and as a client connecting to external MCP servers.
+A Spring Boot application showcasing **Spring AI (2.0.1)** capabilities, including Persistent Chat Memory, Basic & Advanced RAG, Autonomous Function / Tool Calling, Multi-Format Document ETL Pipeline, Vector Store Search (Qdrant), Audio Transcription (OpenAI Whisper), AI Image Generation & Download, and **Model Context Protocol (MCP)** — both as an internal server exposing tools and as a client orchestrating external MCP servers.
 
 ---
 
 ## 📑 Table of Contents
-- [Architecture & Key Features](#-architecture--key-features)
-- [Prerequisites](#-prerequisites)
-- [Infrastructure Setup (Docker)](#-infrastructure-setup-docker)
-- [Configuration & API Keys](#-configuration--api-keys)
-- [Building & Running the Application](#-building--running-the-application)
-- [Using Swagger UI (OpenAPI)](#-using-swagger-ui-openapi)
-- [API Endpoints & Testing Guide](#-api-endpoints--testing-guide)
-  - [1. Chat API](#1-chat-api)
-  - [2. Tool Calling API](#2-tool-calling-api)
-  - [3. Knowledge Base API](#3-knowledge-base-api)
-  - [4. ETL Pipeline API](#4-etl-pipeline-api)
-  - [5. Audio Transcription API](#5-audio-transcription-api)
-  - [6. Internal MCP — Product Catalog](#6-internal-mcp--product-catalog-server--client)
-  - [7. External MCP — Draw.io](#7-external-mcp--drawio-client)
-- [Project Structure](#-project-structure)
-- [MCP Architecture Deep Dive](#-mcp-architecture-deep-dive)
-- [Troubleshooting](#-troubleshooting)
+- [🌟 Architecture & System Overview](#-architecture--system-overview)
+- [✨ Key Features](#-key-features)
+- [📋 Prerequisites](#-prerequisites)
+- [🐳 Infrastructure Setup (Docker)](#-infrastructure-setup-docker)
+- [⚙️ Configuration & Environment Variables](#️-configuration--environment-variables)
+- [🚀 Building & Running the Application](#-building--running-the-application)
+- [📖 Interactive Swagger UI (OpenAPI)](#-interactive-swagger-ui-openapi)
+- [📡 API Endpoints & Testing Guide](#-api-endpoints--testing-guide)
+  - [1. Chat & Conversational Memory API](#1-chat--conversational-memory-api)
+  - [2. Function / Tool Calling API](#2-function--tool-calling-api)
+  - [3. Knowledge Base & Vector Search API](#3-knowledge-base--vector-search-api)
+  - [4. Document ETL Ingestion Pipeline API](#4-document-etl-ingestion-pipeline-api)
+  - [5. Audio Transcription API (Whisper)](#5-audio-transcription-api-whisper)
+  - [6. Image Generation & Download API](#6-image-generation--download-api)
+  - [7. Internal MCP — Product Catalog (Server + Client)](#7-internal-mcp--product-catalog-server--client)
+  - [8. External MCP — Draw.io Diagram Generator](#8-external-mcp--drawio-diagram-generator)
+- [📁 Project Structure](#-project-structure)
+- [🧩 Deep Dive: Model Context Protocol (MCP)](#-deep-dive-model-context-protocol-mcp)
+- [🛡️ Governance & Advisors](#️-governance--advisors)
+- [🛠️ Troubleshooting & Gotchas](#️-troubleshooting--gotchas)
 
 ---
 
-## 🌟 Architecture & Key Features
+## 🌟 Architecture & System Overview
 
 ```
-                                  +-----------------------------+
-                                  |     OpenAI API Platform     |
-                                  | (gpt-4o-mini / whisper-1)   |
-                                  +--------------^--------------+
-                                                 |
-+---------------------+           +--------------v--------------+           +----------------------+
-|   Swagger UI /      |  HTTP     |    Spring Boot (Spring AI)  |   gRPC    |    Qdrant Vector     |
-|   REST Clients      +---------->| - ChatClient & Advisors     +---------->|    Database          |
-+---------------------+           | - ETL Pipeline & Splitters  |  (6334)   | (Embeddings: 1536d)  |
-                                  | - Function / Tool Calling   |           +----------------------+
-                                  | - Whisper Audio Service     |
-                                  | - MCP Server (product-catalog)|               (27017)
-                                  | - MCP Client (drawio)       +---------->  MongoDB Database
-                                  +--------------^--------------+           (Conversational Memory
-                                                 | stdio                     + Product Catalog)
-                                  +--------------v--------------+
-                                  |   Draw.io MCP Server        |
-                                  |   (@drawio/mcp via npx)     |
-                                  +-----------------------------+
+                                  +------------------------------------+
+                                  |        OpenAI Platform APIs        |
+                                  | - Chat: gpt-4o-mini                |
+                                  | - Embeddings: text-embedding-3     |
+                                  | - Audio: whisper-1                 |
+                                  | - Images: gpt-image-1-mini         |
+                                  +-----------------^------------------+
+                                                    |
++---------------------+              +--------------v------------------+              +----------------------+
+|   Swagger UI /      |   HTTP/SSE   |     Spring Boot (Spring AI)     |     gRPC     |    Qdrant Vector     |
+|   REST Clients      +------------->| - ChatClient & Custom Advisors  +------------->|    Database          |
++---------------------+              | - ETL Pipeline & Chunk Splitters|    (6334)    | (Embeddings: 1536d)  |
+                                     | - Dynamic Multi-Tool Calling    |              +----------------------+
+                                     | - Whisper Audio Speech-to-Text  |
+                                     | - Image Generation & Download   |                  (27017)
+                                     | - MCP Server (product-catalog)  +------------> MongoDB Database
+                                     | - MCP Client (drawio via stdio) |              (Conversational Memory
+                                     +--------------^------------------+               + Product Catalog)
+                                                    | stdio
+                                     +--------------v------------------+
+                                     |   Draw.io External MCP Server   |
+                                     |      (@drawio/mcp via npx)      |
+                                     +---------------------------------+
 ```
 
-### Key Features
-1. **Conversational Memory**: Chat history stored persistently in MongoDB per `conversationId`.
+---
+
+## ✨ Key Features
+
+1. **Persistent Conversational Memory**: Thread-safe chat history stored in MongoDB using `MessageChatMemoryAdvisor`, referenced by `conversationId`.
 2. **Retrieval-Augmented Generation (RAG)**:
-   - **Basic RAG**: Vector search with Question-Answer Advisor.
-   - **Advanced RAG**: Contextual query augmentation and re-ranking for higher relevance.
-3. **Dynamic Prompting**: Parameterized prompt generation (topic, persona, tone, language, format).
-4. **Tool / Function Calling**:
-   - **Local Tools**: DateTime utilities and mathematical expressions.
-   - **External REST Tools**: Live JSONPlaceholder Users API.
-   - **Combined Multi-Tool Calling**: Model autonomously chains multiple tools.
-5. **Multi-Format Document ETL**: Ingest and chunk PDF, JSON, DOCX, Markdown, Text, and HTML into Qdrant vector store.
-6. **Audio Transcription**: Speech-to-text powered by OpenAI Whisper.
-7. **Model Context Protocol (MCP)**:
-   - **Internal MCP Server** (`product-catalog`): Exposes Product CRUD tools over MCP (WebMVC/SSE).
-   - **External MCP Client** (`drawio`): Connects to the official Draw.io MCP Server via stdio to generate diagrams.
-8. **Interactive OpenAPI / Swagger Documentation**: Full interactive Swagger UI out of the box.
+   - **Basic RAG**: Vector similarity search with `QuestionAnswerAdvisor`.
+   - **Advanced Contextual RAG**: Dynamic query expansion and re-ranking for enhanced retrieval precision.
+3. **Dynamic Prompt Templating**: Fine-grained template generation controlling topic, persona, tone, language, and output format.
+4. **Autonomous Function / Tool Calling**:
+   - **Local Tools**: DateTime utilities and mathematical expression evaluator.
+   - **External REST API Tools**: Live JSONPlaceholder integration for user data retrieval.
+   - **Dynamic Multi-Tool Orchestration**: Model automatically decides which tools to invoke and chains outputs.
+5. **Multi-Format Document ETL Pipeline**: Automated document reader, chunk transformer, and loader supporting **PDF**, **JSON**, **DOCX**, **Markdown**, **Plain Text**, and **HTML** into Qdrant.
+6. **Audio Transcription**: High-fidelity speech-to-text conversion powered by OpenAI Whisper (`whisper-1`).
+7. **Direct Image Generation & Download**: AI image creation powered by OpenAI image models (`gpt-image-1-mini` / `gpt-image-1`) streaming binary `image/png` bytes directly for in-browser rendering (`inline`) and file downloads (`attachment`).
+8. **Model Context Protocol (MCP)**:
+   - **Internal MCP Server** (`product-catalog`): In-process WebMVC MCP server exposing MongoDB Product CRUD tools.
+   - **External MCP Client** (`drawio`): Stdio transport connecting to `@drawio/mcp` to autonomously generate live, editable diagrams.
+9. **Enterprise Governance & Observability**:
+   - `SafeGuardAdvisor`: Keyword-based content moderation guardrail.
+   - `ExecutionAuditAdvisor`: Custom audit interceptor tracking token usage and execution latency.
+10. **Interactive Swagger UI**: Out-of-the-box OpenAPI 3.0 documentation with interactive "Try It Out" support.
 
 ---
 
 ## 📋 Prerequisites
 
-Ensure you have the following installed on your machine:
 - **Java 21** or later (`java -version`)
 - **Maven 3.9+** (`mvn -version`)
-- **Docker** / **Docker Compose** (for MongoDB and Qdrant)
-- **Node.js 18+** with `npx` — required for the Draw.io MCP Server (`npx -y @drawio/mcp`)
+- **Docker** & **Docker Compose** (for MongoDB and Qdrant)
+- **Node.js 18+** with `npx` (required for Draw.io MCP Server: `npx -y @drawio/mcp`)
 - **OpenAI API Key** ([platform.openai.com](https://platform.openai.com/))
 
 ---
 
 ## 🐳 Infrastructure Setup (Docker)
 
-Start MongoDB and Qdrant vector database using Docker:
-
-### Option 1: Run individual Docker containers
+Start the required backing services (MongoDB and Qdrant):
 
 ```bash
 # 1. Start MongoDB (Port 27017)
@@ -101,29 +112,37 @@ docker run -d \
   qdrant/qdrant:latest
 ```
 
-### Option 2: Verify running containers
+Verify containers are running:
 ```bash
 docker ps
 ```
-You should see `mongodb` (port 27017) and `qdrant` (ports 6333, 6334) in running state.
 
 ---
 
-## ⚙️ Configuration & API Keys
+## ⚙️ Configuration & Environment Variables
 
-Configure your OpenAI API key in `src/main/resources/application.yaml` or set it as an environment variable:
+Configure your credentials in `src/main/resources/application.yaml` or set environment variables:
 
-### Using Environment Variable (Recommended)
 ```bash
-export SPRING_AI_OPENAI_API_KEY="sk-proj-your-actual-api-key"
+export SPRING_AI_OPENAI_API_KEY="sk-proj-your-api-key-here"
 ```
 
-### Or update `src/main/resources/application.yaml` directly:
+### Key Configuration Reference (`src/main/resources/application.yaml`)
+
 ```yaml
 spring:
+  application:
+    name: spring-ai
+  mongodb:
+    uri: mongodb://localhost:27017/spring-ai
   ai:
+    chat:
+      memory:
+        repository:
+          mongo:
+            create-indices: true
     openai:
-      api-key: Place your Open API Key here
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o-mini
@@ -133,10 +152,20 @@ spring:
       audio:
         transcription:
           model: whisper-1
+      image:
+        options:
+          model: gpt-image-1-mini
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: spring_ai_documents
+        use-tls: false
+        initialize-schema: false
     mcp:
       server:
         enabled: true
-        name: product-catalog   # Internal MCP Server name
+        name: product-catalog
         version: 1.0.0
         type: SYNC
       client:
@@ -146,7 +175,7 @@ spring:
           enabled: false
         stdio:
           connections:
-            drawio:             # External Draw.io MCP Server
+            drawio:
               command: npx
               args:
                 - "-y"
@@ -157,114 +186,114 @@ spring:
 
 ## 🚀 Building & Running the Application
 
-### 1. Build the project
+### 1. Build the Application
 ```bash
 mvn clean compile -DskipTests
 ```
 
-### 2. Run the Spring Boot application
+### 2. Run the Spring Boot App
 ```bash
 mvn spring-boot:run
 ```
 
-Once the application starts, it will listen on `http://localhost:8080`.
+Once started, the application listens on `http://localhost:8080`.
 
-On startup you should see in the logs:
+**Startup Verification Logs:**
 ```
-McpServerAutoConfiguration : Registered tools: 5          ← Internal Product MCP Server UP
-StdioClientTransport       : Draw.io MCP server running on stdio  ← External Draw.io MCP Client connected
-SpringAiApplication        : Started SpringAiApplication in ~5s
+McpServerAutoConfiguration : Registered tools: 5          ← Product MCP Server Ready
+StdioClientTransport       : Draw.io MCP server running on stdio  ← External Draw.io MCP Connected
+SpringAiApplication        : Started SpringAiApplication in ~3.5s
 ```
 
 ---
 
-## 📖 Using Swagger UI (OpenAPI)
+## 📖 Interactive Swagger UI (OpenAPI)
 
-Once the application is running, open your web browser and navigate to:
+Once running, access the interactive API docs directly in your browser:
 
-👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
-*(or [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))*
+👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**  
+*(Alternative URL: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))*
 
-### Raw OpenAPI JSON Specification:
+**Raw OpenAPI JSON Specification:**  
 👉 **[http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)**
-
-### How to test endpoints in Swagger UI:
-1. Open the Swagger UI page in your browser.
-2. Click on any section (e.g., **Chat API**, **Internal Product MCP API**, **External Draw.io MCP API**).
-3. Expand any endpoint and click **"Try it out"**.
-4. Fill in the query parameters or request body.
-5. Click **"Execute"** to inspect the live response, status code, and headers!
 
 ---
 
 ## 📡 API Endpoints & Testing Guide
 
-### 1. Chat API
+### 1. Chat & Conversational Memory API
 
-#### 💬 Standard Chat with Memory
+#### 💬 Standard Chat with Conversation Memory
+Remembers past context across multiple turns using `conversationId`:
 ```bash
-curl -X GET "http://localhost:8080/api/chat/ask?prompt=My+name+is+Akshat&conversationId=session-1"
-curl -X GET "http://localhost:8080/api/chat/ask?prompt=What+is+my+name?&conversationId=session-1"
+# Turn 1
+curl -X GET "http://localhost:8080/api/chat/ask?prompt=My+name+is+Alex&conversationId=session-101"
+
+# Turn 2 (Verifies memory recall)
+curl -X GET "http://localhost:8080/api/chat/ask?prompt=What+is+my+name?&conversationId=session-101"
 ```
 
-#### 📚 RAG (Knowledge Retrieval)
+#### 📚 Basic RAG (Vector Search)
+Retrieves relevant indexed document chunks from Qdrant and injects them into the prompt context:
 ```bash
-curl -X GET "http://localhost:8080/api/chat/rag?prompt=What+is+Spring+AI?&conversationId=session-1"
+curl -X GET "http://localhost:8080/api/chat/rag?prompt=What+is+Spring+AI?&conversationId=session-101"
 ```
 
-#### 🔍 Advanced RAG (Contextual Query Augmentation)
+#### 🔍 Advanced RAG (Contextual Augmentation)
+Performs query rewriting and re-ranking for improved recall:
 ```bash
-curl -X GET "http://localhost:8080/api/chat/rag/advance?prompt=Explain+architecture+patterns&conversationId=session-1"
+curl -X GET "http://localhost:8080/api/chat/rag/advance?prompt=Explain+distributed+caching+patterns&conversationId=session-101"
 ```
 
-#### 🎯 Dynamic Prompt Template
+#### 🎯 Dynamic Prompt Templating
 ```bash
-curl -X POST "http://localhost:8080/api/chat/dynamic?conversationId=session-1" \
+curl -X POST "http://localhost:8080/api/chat/dynamic?conversationId=session-101" \
   -H "Content-Type: application/json" \
   -d '{
     "topic": "Microservices vs Monoliths",
     "persona": "Chief Architect",
     "tone": "concise and analytical",
     "language": "English",
-    "format": "bullet points with pros and cons",
-    "additionalInstructions": "Highlight database scalability considerations"
+    "format": "bullet points with trade-offs",
+    "additionalInstructions": "Highlight operational complexity"
   }'
 ```
 
 #### ⚡ Real-Time Streaming (SSE)
+Streams tokens as Server-Sent Events (SSE):
 ```bash
-curl -N -X GET "http://localhost:8080/api/chat/streaming?prompt=Write+a+poem+about+coding&conversationId=stream-1"
+curl -N -X GET "http://localhost:8080/api/chat/streaming?prompt=Tell+me+a+short+story+about+a+coder&conversationId=stream-1"
 ```
 
 ---
 
-### 2. Tool Calling API
+### 2. Function / Tool Calling API
 
-#### 🧮 Local Tools (DateTime & Calculator)
+#### 🧮 Local Tools (DateTime & Expression Calculator)
 ```bash
 curl -X GET "http://localhost:8080/api/chat/tools/normal?prompt=What+is+the+current+UTC+time+and+calculate+15+percent+of+850?&conversationId=tool-1"
 ```
 
-#### 🌐 External REST API Tools (JSONPlaceholder Users)
+#### 🌐 External REST API Tool (JSONPlaceholder Users)
 ```bash
-curl -X GET "http://localhost:8080/api/chat/tools/users?prompt=Give+me+details+for+user+with+id+1&conversationId=tool-1"
+curl -X GET "http://localhost:8080/api/chat/tools/users?prompt=Fetch+details+for+user+id+1&conversationId=tool-1"
 ```
 
-#### 🛠️ All Tools Combined
+#### 🛠️ Combined Multi-Tool Calling
 ```bash
-curl -X GET "http://localhost:8080/api/chat/tools/all?prompt=Who+is+user+2+and+convert+their+temperature+25+Celsius+to+Fahrenheit?&conversationId=tool-1"
+curl -X GET "http://localhost:8080/api/chat/tools/all?prompt=Who+is+user+2+and+convert+25+Celsius+to+Fahrenheit?&conversationId=tool-1"
 ```
 
 ---
 
-### 3. Knowledge Base API
+### 3. Knowledge Base & Vector Search API
 
 #### 📥 Add Document to Vector Store
 ```bash
 curl -X POST "http://localhost:8080/api/knowledge/documents" \
   -H "Content-Type: application/json" \
   -d '{
-    "content": "Spring AI provides high-level abstractions for AI models and vector stores in Spring Boot.",
+    "content": "Spring AI provides high-level abstractions for AI models and vector databases.",
     "metadata": {
       "category": "framework",
       "author": "Spring Team"
@@ -279,17 +308,16 @@ curl -X GET "http://localhost:8080/api/knowledge/search?query=Spring+AI+framewor
 
 ---
 
-### 4. ETL Pipeline API
+### 4. Document ETL Ingestion Pipeline API
 
-#### 📁 Batch Ingest Local Folder into Qdrant
+Batch ingests and chunks documents from a folder into Qdrant. Supports `.pdf`, `.json`, `.docx`, `.md`, `.txt`, and `.html`:
 ```bash
 curl -X POST "http://localhost:8080/api/etl/ingest-folder?folderPath=src/main/resources/documents"
 ```
-*Supported formats: `.pdf`, `.json`, `.docx`, `.md`, `.txt`, `.html`.*
 
 ---
 
-### 5. Audio Transcription API
+### 5. Audio Transcription API (Whisper)
 
 #### 🎙️ Transcribe Sample Audio
 ```bash
@@ -299,63 +327,79 @@ curl -X GET "http://localhost:8080/api/audio/transcription/sample"
 #### 📤 Transcribe Custom Audio File
 ```bash
 curl -X POST "http://localhost:8080/api/audio/transcription/upload/custom" \
-  -F "file=@/path/to/audio.mp3" \
-  -F "prompt=Technical discussion on Spring AI" \
+  -F "file=@/path/to/meeting.mp3" \
+  -F "prompt=Engineering team standup" \
   -F "language=en"
 ```
 
 ---
 
-### 6. Internal MCP — Product Catalog (Server + Client)
+### 6. Image Generation & Download API
 
-This app runs an **internal MCP Server** (`product-catalog`) exposing Product CRUD tools. The AI client calls these tools via natural language prompts.
+Generate images via OpenAI (`gpt-image-1-mini` / `gpt-image-1`) and directly stream PNG bytes without saving temporary files to disk.
 
-**Available MCP Tools registered on the server:**
-| Tool Name | Description |
-|---|---|
-| `addProduct` | Add a new product to the MongoDB catalog |
-| `getProduct` | Get a product by ID |
-| `getAllProducts` | List all products in the catalog |
-| `updateProduct` | Update product fields by ID |
-| `deleteProduct` | Delete a product by ID |
-
-#### 💬 Chat with Internal Product MCP Tools
+#### 📥 Direct Download (`Content-Disposition: attachment`)
+Triggers an immediate file download in your browser or writes directly to file via `curl`:
 ```bash
-# Add a product
-curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Add+a+MacBook+Pro+M4+for+2499.99+USD+in+Electronics+with+50+stock&conversationId=product-1"
+# Via GET query parameter:
+curl "http://localhost:8080/api/image/download?prompt=A+serene+mountain+lake+at+sunset" -o lake.png
 
-# Get all products
-curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=List+all+products+in+the+catalog&conversationId=product-1"
+# Via POST JSON request body:
+curl -X POST "http://localhost:8080/api/image/download" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A futuristic cyber city in neon lights"}' \
+  -o cyber_city.png
+```
 
-# Update a product
-curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Update+the+price+of+product+ID+<id>+to+2299.99&conversationId=product-1"
-
-# Delete a product
-curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Delete+product+with+id+<id>&conversationId=product-1"
+#### 🖼️ Direct Browser View (`Content-Disposition: inline`)
+Paste this URL directly into your browser to view the generated image rendered immediately on screen:
+```
+http://localhost:8080/api/image/generate?prompt=A+cute+golden+retriever+puppy
+```
+Or via POST:
+```bash
+curl -X POST "http://localhost:8080/api/image/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A cute golden retriever puppy"}' \
+  -o puppy.png
 ```
 
 ---
 
-### 7. External MCP — Draw.io Client
+### 7. Internal MCP — Product Catalog (Server + Client)
 
-This app connects as an **MCP Client** to the official **Draw.io MCP Server** (`@drawio/mcp`) via stdio. The AI model can generate and open Draw.io diagrams using natural language.
+An in-process **MCP Server** (`product-catalog`) exposes 5 CRUD tools to the AI model:
+- `addProduct`: Creates a new product in MongoDB.
+- `getProduct`: Finds a product by ID.
+- `getAllProducts`: Lists all catalog items.
+- `updateProduct`: Updates product name, price, stock, or category.
+- `deleteProduct`: Removes a product by ID.
 
-#### 🎨 Generate a Draw.io Diagram
 ```bash
-# Simple architecture diagram
-curl -X GET "http://localhost:8080/api/mcp/external/drawio/generate?prompt=simple+client-API-server-database+diagram&conversationId=drawio-1"
+# Add a product via conversational prompt
+curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Add+a+MacBook+Pro+M4+for+2499.99+USD+in+Electronics+with+50+stock&conversationId=prod-1"
 
-# AWS microservices architecture
-curl -X GET "http://localhost:8080/api/mcp/external/drawio/generate?prompt=AWS+microservices+architecture+with+API+Gateway+Lambda+DynamoDB+and+S3&conversationId=drawio-2"
+# List all products
+curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=List+all+products+in+the+catalog&conversationId=prod-1"
 
-# CI/CD pipeline flow
-curl -X GET "http://localhost:8080/api/mcp/external/drawio/generate?prompt=CI+CD+pipeline+from+GitHub+to+Docker+to+Kubernetes&conversationId=drawio-3"
+# Update a product
+curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Update+the+price+of+product+ID+<id>+to+2199.99&conversationId=prod-1"
+
+# Delete a product
+curl -X GET "http://localhost:8080/api/mcp/internal/products/chat?prompt=Delete+product+with+id+<id>&conversationId=prod-1"
 ```
 
-The response includes a **clickable Draw.io link** that opens your generated diagram directly in the browser!
+---
 
-#### 🔧 List All Draw.io MCP Tools
+### 8. External MCP — Draw.io Diagram Generator
+
+Connects to the official **Draw.io MCP Server** (`@drawio/mcp`) running via stdio subprocess. The model generates valid diagram XML and returns a **clickable browser link** that opens the editable diagram directly in Draw.io.
+
 ```bash
+# Generate architecture diagram
+curl -X GET "http://localhost:8080/api/mcp/external/drawio/generate?prompt=Client+API-Gateway+Microservice+PostgreSQL+diagram&conversationId=draw-1"
+
+# List all discovered Draw.io MCP tools
 curl -X GET "http://localhost:8080/api/mcp/external/drawio/tools"
 ```
 
@@ -365,164 +409,142 @@ curl -X GET "http://localhost:8080/api/mcp/external/drawio/tools"
 
 ```
 spring-ai/
-├── pom.xml
-├── README.md
+├── pom.xml                                  # Dependencies (Spring Boot 4.0.8, Spring AI 2.0.1, Qdrant, Mongo)
+├── README.md                                # Comprehensive Project Documentation
 └── src/
     └── main/
         ├── java/com/learning/
-        │   ├── SpringAiApplication.java
-        │   ├── advisor/                     # Custom Execution Audit Advisor (token tracking)
+        │   ├── SpringAiApplication.java     # Application Boot Entrypoint
+        │   ├── advisor/
+        │   │   └── ExecutionAuditAdvisor.java # Token Tracking & Execution Latency Interceptor
         │   ├── audiotranscription/
         │   │   ├── controller/              # Audio Transcription REST Controller
         │   │   └── service/                 # OpenAI Whisper Integration Service
-        │   ├── config/                      # OpenAPI, AI, RAG & Properties Config
-        │   ├── controller/                  # Chat, Knowledge & Tool REST Controllers
-        │   ├── dto/                         # API Request & Response DTOs
+        │   ├── config/
+        │   │   ├── AiConfig.java            # ChatClient, Advisors, and Vector Store Beans
+        │   │   ├── OpenApiConfig.java       # Swagger / OpenAPI Specification
+        │   │   └── RagProperties.java       # Configuration Properties Binding
+        │   ├── controller/
+        │   │   ├── ApiExceptionHandler.java # Global REST Exception Handler
+        │   │   ├── ChatController.java      # Chat, Memory, RAG, and Streaming Endpoints
+        │   │   ├── KnowledgeController.java # Qdrant Document Ingestion & Search
+        │   │   └── ToolChatController.java  # Function Calling Endpoints
+        │   ├── dto/                         # Request & Response Data Transfer Objects
         │   ├── etl/                         # Document ETL Pipeline
-        │   │   ├── config/                  # ETL configuration
+        │   │   ├── config/                  # ETL Configuration
         │   │   ├── controller/              # ETL REST Controller
-        │   │   ├── loader/                  # VectorStore Document Loader
-        │   │   ├── model/                   # DocumentType enum
-        │   │   ├── reader/                  # PDF, JSON, HTML Document Readers
+        │   │   ├── loader/                  # Vector Store Ingestion Loader
+        │   │   ├── model/                   # Supported Document Types
+        │   │   ├── reader/                  # PDF, JSON, DOCX, Markdown, HTML Readers
         │   │   ├── service/                 # ETL Orchestration Service
-        │   │   └── transformer/             # Document Chunk Transformer
-        │   ├── mapper/                      # ChatResponse & Document Mappers
+        │   │   └── transformer/             # Token-based Text Splitter & Chunkers
+        │   ├── imagegeneration/
+        │   │   ├── controller/              # Image Generation & Download Controller
+        │   │   ├── dto/                     # Image Request & Response Models
+        │   │   └── service/                 # OpenAI ImageModel Service
+        │   ├── mapper/                      # Chat and Document Response Mappers
         │   ├── mcp/
-        │   │   ├── internal/                # 🔵 Internal MCP (Server + Client in-process)
-        │   │   │   ├── client/
-        │   │   │   │   ├── ProductMcpChatService.java   # AI ChatClient using ProductMcpTools
-        │   │   │   │   └── ProductMcpController.java    # REST → AI → MCP Tool call
-        │   │   │   ├── model/
-        │   │   │   │   └── Product.java                 # MongoDB Document model
-        │   │   │   ├── repository/
-        │   │   │   │   └── ProductRepository.java       # MongoDB Repository
-        │   │   │   ├── server/
-        │   │   │   │   └── ProductMcpTools.java         # @McpTool annotated tools (CRUD)
-        │   │   │   └── service/
-        │   │   │       └── ProductService.java          # Product business logic
-        │   │   └── external/                # 🟢 External MCP Client (Draw.io)
-        │   │       ├── DrawioMcpChatService.java        # AI + SyncMcpToolCallbackProvider
-        │   │       └── DrawioMcpController.java         # REST → AI → Draw.io MCP tool call
+        │   │   ├── internal/                # 🔵 In-Process MCP Server & Client
+        │   │   │   ├── client/              # ProductMcpChatService & Controller
+        │   │   │   ├── model/               # Product MongoDB Entity
+        │   │   │   ├── repository/          # Product MongoDB Repository
+        │   │   │   ├── server/              # ProductMcpTools (@McpTool definitions)
+        │   │   │   └── service/             # Product Business Logic
+        │   │   └── external/                # 🟢 External MCP Client (Draw.io via stdio)
+        │   │       ├── DrawioMcpChatService.java
+        │   │       └── DrawioMcpController.java
         │   ├── prompt/                      # Dynamic Prompt Templates & Factory
-        │   ├── service/                     # Chat, Streaming & Knowledge Services
-        │   ├── tools/                       # DateTime, Calculator & External API Tools
-        │   └── validation/                  # SafeGuard & Request Input Validators
+        │   ├── service/                     # Chat, Knowledge, and Streaming Services
+        │   ├── tools/                       # DateTime, Calculator, and REST API Tools
+        │   └── validation/                  # SafeGuard & Input Validation Rules
         └── resources/
-            ├── application.yaml             # Full Application & MCP Configuration
-            └── documents/                   # Sample ETL documents (PDF, JSON, etc.)
+            ├── application.yaml             # Application Configuration & Model Settings
+            ├── audio/                       # Sample Audio Files for Whisper Testing
+            └── documents/                   # Sample ETL Documents (PDF, JSON, HTML, etc.)
 ```
 
 ---
 
-## 🧩 MCP Architecture Deep Dive
+## 🧩 Deep Dive: Model Context Protocol (MCP)
 
-### What is MCP (Model Context Protocol)?
-MCP is an open protocol that allows AI models to call external tools, access resources, and execute actions in a standardized way — similar to how REST APIs work but specifically designed for AI tool calling.
-
-### How This Project Uses MCP
+### Internal vs External MCP Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Spring Boot Application                        │
-│                                                                     │
-│  ┌───────────────────────────────────────────┐                     │
-│  │         INTERNAL MCP (in-process)          │                     │
-│  │                                           │                     │
-│  │  ProductMcpController                     │                     │
-│  │       │                                   │                     │
-│  │       ▼                                   │                     │
-│  │  ProductMcpChatService ──► ChatClient     │                     │
-│  │       │                         │         │                     │
-│  │       │                         ▼         │                     │
-│  │       │                    OpenAI API      │                     │
-│  │       │                         │         │                     │
-│  │       │              (tool call decided)   │                     │
-│  │       │                         ▼         │                     │
-│  │       └────────────► ProductMcpTools      │                     │
-│  │                      (addProduct,          │                     │
-│  │                       getProduct, etc.)    │                     │
-│  │                            │               │                     │
-│  │                            ▼               │                     │
-│  │                        MongoDB             │                     │
-│  └───────────────────────────────────────────┘                     │
-│                                                                     │
-│  ┌───────────────────────────────────────────┐                     │
-│  │   EXTERNAL MCP CLIENT (Draw.io via stdio)  │                     │
-│  │                                           │                     │
-│  │  DrawioMcpController                      │                     │
-│  │       │                                   │                     │
-│  │       ▼                                   │                     │
-│  │  DrawioMcpChatService ──► ChatClient      │                     │
-│  │                   SyncMcpToolCallbackProvider                   │
-│  │                               │           │                     │
-│  │                               ▼           │                     │
-│  │                          OpenAI API       │                     │
-│  │                               │           │                     │
-│  │                    (tool call decided)    │                     │
-│  │                               │           │                     │
-│  │                    stdio transport        │                     │
-│  │                               ▼           │                     │
-│  │                   @drawio/mcp (npx)       │                     │
-│  │                  (external process)       │                     │
-│  └───────────────────────────────────────────┘                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Spring Boot Application                         │
+│                                                                        │
+│  ┌──────────────────────────────────────────────┐                      │
+│  │          INTERNAL MCP (In-Process)           │                      │
+│  │                                              │                      │
+│  │  ProductMcpController                        │                      │
+│  │       │                                      │                      │
+│  │       ▼                                      │                      │
+│  │  ProductMcpChatService ──► ChatClient        │                      │
+│  │       │                          │           │                      │
+│  │       │                          ▼           │                      │
+│  │       │                     OpenAI API       │                      │
+│  │       │                          │           │                      │
+│  │       │               (Tool Decided)         │                      │
+│  │       │                          ▼           │                      │
+│  │       └─────────────► ProductMcpTools        │                      │
+│  │                       (addProduct, etc.)     │                      │
+│  │                              │               │                      │
+│  │                              ▼               │                      │
+│  │                           MongoDB            │                      │
+│  └──────────────────────────────────────────────┘                      │
+│                                                                        │
+│  ┌──────────────────────────────────────────────┐                      │
+│  │      EXTERNAL MCP CLIENT (Draw.io via stdio) │                      │
+│  │                                              │                      │
+│  │  DrawioMcpController                         │                      │
+│  │       │                                      │                      │
+│  │       ▼                                      │                      │
+│  │  DrawioMcpChatService ──► ChatClient         │                      │
+│  │                    SyncMcpToolCallbackProvider                      │
+│  │                                │             │                      │
+│  │                                ▼             │                      │
+│  │                           OpenAI API         │                      │
+│  │                                │             │                      │
+│  │                         (Tool Decided)       │                      │
+│  │                                │             │                      │
+│  │                         stdio transport      │                      │
+│  │                                ▼             │                      │
+│  │                     @drawio/mcp (npx)        │                      │
+│  │                     (External Subprocess)    │                      │
+│  └──────────────────────────────────────────────┘                      │
+└────────────────────────────────────────────────────────────────────────┘
 ```
-
-### MCP Configuration Reference (`application.yaml`)
-
-```yaml
-spring:
-  ai:
-    mcp:
-      server:
-        enabled: true          # Enable the internal MCP Server
-        name: product-catalog  # Server identity name (no spaces)
-        version: 1.0.0         # Server version
-        type: SYNC             # SYNC = synchronous (blocking) execution
-
-      client:
-        enabled: true          # Enable MCP client (connects to external servers)
-        type: SYNC             # Must match server type
-        annotation-scanner:
-          enabled: false       # Disable classpath scanning (not needed here)
-        stdio:
-          connections:
-            drawio:            # Connection alias (can be any unique name)
-              command: npx     # Command to launch the external MCP server process
-              args:
-                - "-y"
-                - "@drawio/mcp"
-```
-
-### Key Classes
-
-| Class | Role |
-|---|---|
-| [`ProductMcpTools`](src/main/java/com/learning/mcp/internal/server/ProductMcpTools.java) | MCP Server — defines tools with `@McpTool` and `@Tool` annotations |
-| [`ProductMcpChatService`](src/main/java/com/learning/mcp/internal/client/ProductMcpChatService.java) | Internal client — passes `productMcpTools` to `ChatClient.tools()` |
-| [`DrawioMcpChatService`](src/main/java/com/learning/mcp/external/DrawioMcpChatService.java) | External client — passes `SyncMcpToolCallbackProvider` (auto-discovered Draw.io tools) |
-| `SyncMcpToolCallbackProvider` | Spring AI bean that holds all tools discovered from connected external MCP servers |
 
 ---
 
-## 🛠️ Troubleshooting
+## 🛡️ Governance & Advisors
 
-1. **MongoDB Connection Refused (`localhost:27017`)**:
-   - Ensure MongoDB Docker container is running: `docker start mongodb` or `docker run -d -p 27017:27017 mongo:latest`.
+Spring AI provides an interceptor/advisor pipeline chained around every `ChatClient` call:
+1. **`MessageChatMemoryAdvisor`**: Automatically retrieves preceding conversation turns from MongoDB and appends the latest turn upon completion.
+2. **`SafeGuardAdvisor`**: Intercepts input prompts and immediately returns a configured failure message if prohibited keywords are detected (configured under `app.ai.safeguard.sensitive-words`).
+3. **`SimpleLoggerAdvisor`**: Logs outgoing prompts and model responses for debugging.
+4. **`ExecutionAuditAdvisor`**: Custom audit advisor recording token usage (`promptTokens`, `generationTokens`, `totalTokens`) and total call execution duration in milliseconds.
 
-2. **Qdrant gRPC Connection Error (`localhost:6334`)**:
-   - Ensure Qdrant container is running: `docker start qdrant` or `docker run -d -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest`.
+---
 
-3. **OpenAI 401 Unauthorized / Invalid API Key**:
-   - Verify your API key is correctly specified in `application.yaml` or exported as `SPRING_AI_OPENAI_API_KEY`.
+## 🛠️ Troubleshooting & Gotchas
 
-4. **Draw.io MCP Server not connecting (`npx: command not found`)**:
-   - Install Node.js 18+ and verify: `node -v` and `npx -v`.
-   - Try manually: `npx -y @drawio/mcp` to ensure the package installs correctly.
+1. **OpenAI Image Generation Error (`400: Unknown parameter: 'response_format'` or Invalid Model)**:
+   - Modern OpenAI models like `gpt-image-1-mini` and `gpt-image-1` return `b64_json` by default and reject the legacy `response_format` parameter.
+   - Quality options for `gpt-image-1-mini` must be `low`, `medium`, `high`, or `auto` (not `standard`).
+   - The application handles base64 decoding and binary streaming automatically.
 
-5. **App crashes on startup with `NoClassDefFoundError: TypeInformation`**:
-   - Ensure `annotation-scanner.enabled: false` is set under `spring.ai.mcp.client` in `application.yaml`.
+2. **Qdrant Vector Database Connection (`localhost:6334`)**:
+   - If Qdrant is not running locally, ensure `spring.ai.vectorstore.qdrant.initialize-schema: false` is configured in `application.yaml` so startup is not blocked.
+   - Start Qdrant with: `docker run -d -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest`.
 
-6. **Swagger UI Not Loading**:
-   - Verify the server is running on `http://localhost:8080`.
-   - Access via direct URL: `http://localhost:8080/swagger-ui/index.html`.
+3. **MongoDB Connection (`localhost:27017`)**:
+   - Start MongoDB with: `docker run -d -p 27017:27017 mongo:latest`.
+   - Conversational chat memory and product catalog persist in the `spring-ai` database.
+
+4. **Draw.io MCP Server (`npx: command not found`)**:
+   - Verify Node.js is installed (`node -v`, `npx -v`).
+   - Test manual execution: `npx -y @drawio/mcp`.
+
+5. **`NoClassDefFoundError: TypeInformation` on Startup**:
+   - Keep `spring.ai.mcp.client.annotation-scanner.enabled: false` in `application.yaml` to avoid unnecessary classpath scanning conflicts.

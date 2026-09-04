@@ -1,14 +1,14 @@
 package com.learning.imagegeneration.service;
 
-import com.learning.imagegeneration.dto.ImageRequest;
-import com.learning.imagegeneration.dto.ImageResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.image.ImageResponse;
-import org.springframework.ai.openai.OpenAiImageOptions;
 import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.util.Base64;
 
 @Slf4j
 @Service
@@ -17,35 +17,28 @@ public class ImageGenerationService {
 
     private final ImageModel imageModel;
 
-    public ImageResponseDto generateImage(ImageRequest request) {
-        log.info("Generating image with prompt: '{}', model: {}, quality: {} ({}x{})",
-                request.getPrompt(), request.getModel(), request.getQuality(), request.getWidth(), request.getHeight());
+    public byte[] generateImage(String prompt) {
+        log.info("Generating image for prompt: '{}'", prompt);
 
-        OpenAiImageOptions.Builder optionsBuilder = OpenAiImageOptions.builder();
-        if (request.getModel() != null) {
-            optionsBuilder.model(request.getModel());
-        }
-        if (request.getQuality() != null) {
-            optionsBuilder.quality(request.getQuality());
-        }
-        if (request.getWidth() != null) {
-            optionsBuilder.width(request.getWidth());
-        }
-        if (request.getHeight() != null) {
-            optionsBuilder.height(request.getHeight());
-        }
-
-        ImageResponse response = imageModel.call(
-                new ImagePrompt(request.getPrompt(), optionsBuilder.build())
-        );
-
+        ImageResponse response = imageModel.call(new ImagePrompt(prompt));
         if (response == null || response.getResult() == null || response.getResult().getOutput() == null) {
-            log.warn("Empty response returned from ImageModel for prompt: '{}'", request.getPrompt());
             throw new RuntimeException("Failed to generate image: Empty response from AI model");
         }
 
-        String url = response.getResult().getOutput().getUrl();
-        String b64Json = response.getResult().getOutput().getB64Json();
-        return new ImageResponseDto(url, b64Json);
+        var output = response.getResult().getOutput();
+
+        if (output.getB64Json() != null && !output.getB64Json().isBlank()) {
+            return Base64.getDecoder().decode(output.getB64Json());
+        }
+
+        if (output.getUrl() != null && !output.getUrl().isBlank()) {
+            try (var in = URI.create(output.getUrl()).toURL().openStream()) {
+                return in.readAllBytes();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to download image from URL: " + output.getUrl(), e);
+            }
+        }
+
+        throw new RuntimeException("No image data returned from AI model");
     }
 }

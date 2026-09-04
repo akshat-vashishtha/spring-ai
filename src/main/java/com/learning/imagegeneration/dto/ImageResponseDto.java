@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Response model for generated images")
 public class ImageResponseDto {
-    @Schema(description = "The URL of the generated image")
+    @Schema(description = "The URL of the generated image", example = "http://localhost:8080/api/image/view/img_123.png")
     private String url;
-
-    @Schema(description = "The base64-encoded image data")
-    private String b64Json;
 }
