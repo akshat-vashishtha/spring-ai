@@ -10,7 +10,7 @@ spring:
           mongo:
             create-indices: true
     openai:
-      api-key: Place your Open API Key here
+      api-key: Place your OPEN AI Key here
       chat:
         options:
           model: gpt-4o-mini
