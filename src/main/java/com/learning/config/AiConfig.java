@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.learning.advisor.ExecutionAuditAdvisor;
+import org.springframework.ai.chat.cache.semantic.SemanticCacheAdvisor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,16 +45,19 @@ public class AiConfig {
                                  MessageChatMemoryAdvisor messageChatMemoryAdvisor,
                                  SimpleLoggerAdvisor simpleLoggerAdvisor,
                                  SafeGuardAdvisor safeGuardAdvisor,
-                                 ExecutionAuditAdvisor executionAuditAdvisor) {
-        log.info("Configuring ChatClient with MessageChatMemoryAdvisor, SafeGuardAdvisor ({} sensitive words), SimpleLoggerAdvisor, and ExecutionAuditAdvisor",
+                                 ExecutionAuditAdvisor executionAuditAdvisor,
+                                 SemanticCacheAdvisor semanticCacheAdvisor) {
+        log.info("Configuring ChatClient with MessageChatMemoryAdvisor, SafeGuardAdvisor ({} sensitive words), SimpleLoggerAdvisor, ExecutionAuditAdvisor, and SemanticCacheAdvisor",
                 aiProperties.getSafeguard().getSensitiveWords().size());
 
         return ChatClient.builder(chatModel)
+                .defaultSystem("You are a helpful assistant.")
                 .defaultAdvisors(
                         messageChatMemoryAdvisor,
                         simpleLoggerAdvisor,
                         safeGuardAdvisor,
-                        executionAuditAdvisor)
+                        executionAuditAdvisor,
+                        semanticCacheAdvisor)
                 .build();
     }
 }

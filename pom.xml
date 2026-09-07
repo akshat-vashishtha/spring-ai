@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
+		<jedis.version>7.4.1</jedis.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -58,6 +59,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-redis-semantic-cache</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>

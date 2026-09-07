@@ -1,6 +1,11 @@
 spring:
   application:
     name: spring-ai
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
   mongodb:
     uri: mongodb://localhost:27017/spring-ai
   ai:
@@ -54,6 +59,9 @@ spring:
 
 app:
   ai:
+    semantic-cache:
+      similarity-threshold: 0.80
+      prefix: "semantic:cache:"
     retrieval:
       top-k: 4
       similarity-threshold: 0.5
@@ -75,6 +83,8 @@ logging:
   level:
     root: INFO
     org.springframework.ai.chat.client.advisor: DEBUG
+    org.springframework.ai.chat.cache: DEBUG
+    org.springframework.ai.vectorstore: DEBUG
     com.learning: DEBUG
 
 springdoc:
