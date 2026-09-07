@@ -5,8 +5,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Service;
 
-import com.learning.dto.ChatResponseDto;
-import com.learning.mapper.ChatResponseMapper;
+import com.learning.chat.dto.ChatResponseDto;
+import com.learning.chat.mapper.ChatResponseMapper;
 import com.learning.mcp.internal.server.ProductMcpTools;
 import com.learning.validation.RequestValidator;
 

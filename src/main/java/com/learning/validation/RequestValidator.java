@@ -2,8 +2,8 @@ package com.learning.validation;
 
 import org.springframework.stereotype.Component;
 
-import com.learning.dto.DynamicPromptRequest;
-import com.learning.dto.KnowledgeDocumentRequest;
+import com.learning.chat.dto.DynamicPromptRequest;
+import com.learning.rag.dto.KnowledgeDocumentRequest;
 
 @Component
 public class RequestValidator {

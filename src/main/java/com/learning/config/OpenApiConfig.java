@@ -32,10 +32,11 @@ public class OpenApiConfig {
                         new Server().url("http://localhost:8080").description("Local Development Server")
                 ))
                 .tags(List.of(
-                        new Tag().name("Chat API").description("Core Chat endpoints with Mongo chat memory, basic & advanced RAG, dynamic prompts, and SSE streaming"),
+                        new Tag().name("Chat API").description("Core Chat endpoints with Mongo chat memory, dynamic prompts, and SSE streaming"),
                         new Tag().name("Tool Calling API").description("Endpoints demonstrating Spring AI Tool / Function Calling (DateTime, Calculator, JSONPlaceholder User APIs)"),
                         new Tag().name("Knowledge Base API").description("Endpoints for storing and searching vector embeddings in Qdrant Vector Store"),
-                        new Tag().name("ETL Pipeline API").description("Batch document ingestion pipeline supporting PDF, JSON, DOCX, Markdown, Text, and HTML"),
+                        new Tag().name("RAG API").description("Endpoints for Basic and Advanced Retrieval-Augmented Generation"),
+                        new Tag().name("ETL Pipeline API").description("Document ingestion pipeline with dedicated PDF/DOCX upload and batch folder processing powered by Apache Tika and TokenTextSplitter"),
                         new Tag().name("Audio Transcription API").description("Audio speech-to-text transcription powered by OpenAI Whisper"),
                         new Tag().name("Image Generation API").description("Generate and directly view or download images using OpenAI image models"),
                         new Tag().name("Internal Product MCP API").description("Chat with in-process MCP Server exposing MongoDB Product CRUD tools"),
