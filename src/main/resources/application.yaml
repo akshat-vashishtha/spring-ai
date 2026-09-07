@@ -32,7 +32,7 @@ spring:
         port: 6334
         collection-name: spring_ai_documents
         use-tls: false
-        initialize-schema: false
+        initialize-schema: true
     mcp:
       server:
         enabled: true

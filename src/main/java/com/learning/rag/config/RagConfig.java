@@ -5,6 +5,7 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -35,7 +36,10 @@ public class RagConfig {
         return RetrievalAugmentationAdvisor.builder()
                 .queryTransformers(RewriteQueryTransformer.builder()
                         .chatClientBuilder(chatClientBuilder.build().mutate())
-                        .build())
+                        .build(),
+                        TranslationQueryTransformer.builder()
+                                .chatClientBuilder(chatClientBuilder.build().mutate()).
+                                targetLanguage("english").build())
                 .documentRetriever(VectorStoreDocumentRetriever.builder()
                         .vectorStore(vectorStore)
                         .similarityThreshold(retrievalProperties.getSimilarityThreshold())
