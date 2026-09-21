@@ -1,0 +1,9 @@
+target/
+.DS_Store
+**/.DS_Store
+META-INF/
+.env
+.idea/
+.vscode/
+docs/
+*.iml

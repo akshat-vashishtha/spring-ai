@@ -1,0 +1,112 @@
+spring:
+  application:
+    name: spring-ai
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+  mongodb:
+    uri: mongodb://localhost:27017/spring-ai
+  ai:
+    chat:
+      memory:
+        repository:
+          mongo:
+            create-indices: true
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+      embedding:
+        options:
+          model: text-embedding-3-small
+      audio:
+        transcription:
+          model: whisper-1
+          response-format: text
+          language: en
+          temperature: 0
+      image:
+        options:
+          model: gpt-image-1-mini
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: spring_ai_documents
+        use-tls: false
+        initialize-schema: true
+    mcp:
+      server:
+        enabled: true
+        name: product-catalog
+        version: 1.0.0
+        type: SYNC
+      client:
+        enabled: true
+        type: SYNC
+        annotation-scanner:
+          enabled: false
+        stdio:
+          connections:
+            drawio:
+              command: npx
+              args:
+                - "-y"
+                - "@drawio/mcp"
+        streamable-http:
+          connections:
+            deepwiki:
+              url: https://mcp.deepwiki.com
+              endpoint: /mcp
+
+app:
+  mcp:
+    elicitation:
+      mode: callback # options: callback (default: REST API callback), console (prompts terminal), auto-accept, auto-decline
+      timeout-seconds: 60
+    tools:
+      allowed:
+        - read_wiki_structure
+        - read_wiki_contents
+        - ask_question
+  ai:
+    semantic-cache:
+      similarity-threshold: 0.80
+      prefix: "semantic:cache:"
+    retrieval:
+      top-k: 4
+      similarity-threshold: 0.5
+    safeguard:
+      sensitive-words:
+        - abusive
+        - vulgar
+        - violence
+        - hate
+        - attack
+        - kill
+        - bomb
+        - terror
+        - illegal
+        - weapon
+      failure-response: "I cannot fulfill this request because it contains prohibited or sensitive content."
+
+logging:
+  level:
+    root: INFO
+    org.springframework.ai.chat.client.advisor: DEBUG
+    org.springframework.ai.chat.cache: DEBUG
+    org.springframework.ai.vectorstore: DEBUG
+    com.learning: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    displayRequestDuration: true
